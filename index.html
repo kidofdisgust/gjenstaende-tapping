@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gjenstående Tapping</title>
+
+  <!-- Valgfritt, men anbefalt for iPhone -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Gjenstående Tapping">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .box {
+      background: white;
+      padding: 1.2rem;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.9rem;
+      font-size: 1.6rem;
+      margin-top: 0.3rem;
+    }
+
+    /* Fjern opp/ned-piler */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    .result {
+      margin-top: 1.2rem;
+      padding: 1rem;
+      background: #eef6ff;
+      border-radius: 10px;
+      font-size: 1.6rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .total {
+      background: #f7f7f7;
+      font-size: 1.4rem;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 1.2rem;
+      padding: 0.8rem;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      background: #d9534f;
+      color: white;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Gjenstående Tapping</h2>
+
+  <label>Tank 1 (liter)</label>
+  <input id="tank1" type="number" inputmode="numeric">
+
+  <label>Tank 2 (liter)</label>
+  <input id="tank2" type="number" inputmode="numeric">
+
+  <label>Liter per time / maskin</label>
+  <input id="rate" type="number" inputmode="numeric">
+
+  <label>Antall maskiner</label>
+  <input id="machines" type="number" inputmode="numeric">
+
+  <div id="totalLiters" class="result total">0 L</div>
+  <div id="timeResult" class="result">–</div>
+
+  <button id="resetBtn">Nullstill</button>
+</div>
+
+<script>
+  const fields = ["tank1", "tank2", "rate", "machines"];
+
+  function calculate() {
+    const tank1 = Number(document.getElementById("tank1").value) || 0;
+    const tank2 = Number(document.getElementById("tank2").value) || 0;
+    const rate = Number(document.getElementById("rate").value) || 0;
+    const machines = Number(document.getElementById("machines").value) || 0;
+
+    const totalLiters = tank1 + tank2;
+    document.getElementById("totalLiters").textContent =
+      `${totalLiters.toLocaleString()} L`;
+
+    const capacity = rate * machines;
+
+    if (capacity > 0 && totalLiters > 0) {
+      const hours = Math.ceil(totalLiters / capacity);
+      document.getElementById("timeResult").textContent =
+        `ca. ${hours} timer`;
+    } else {
+      document.getElementById("timeResult").textContent = "–";
+    }
+
+    fields.forEach(id => {
+      localStorage.setItem(id, document.getElementById(id).value);
+    });
+  }
+
+  function resetAll() {
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      el.value = "";
+      localStorage.removeItem(id);
+    });
+
+    requestAnimationFrame(() => {
+      document.getElementById("totalLiters").textContent = "0 L";
+      document.getElementById("timeResult").textContent = "–";
+    });
+  }
+
+  function lift(el) {
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      const saved = localStorage.getItem(id);
+      if (saved !== null) el.value = saved;
+
+      el.addEventListener("input", calculate);
+      el.addEventListener("focus", () => lift(el));
+    });
+
+    document.getElementById("resetBtn")
+      .addEventListener("click", resetAll);
+
+    calculate();
+  });
+</script>
+
+</body>
+</html>
