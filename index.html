@@ -1,176 +1,290 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gjenstående Tapping</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gjenstående Tapping</title>
 
-  <!-- Valgfritt, men anbefalt for iPhone -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Gjenstående Tapping">
+<style>
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f8fafc;
+}
 
-  <style>
-    * { box-sizing: border-box; }
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
 
-    body {
-      font-family: system-ui, sans-serif;
-      background: #f2f2f2;
-      display: flex;
-      justify-content: center;
-      padding: 1rem;
-    }
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid #e5e7eb;
+}
 
-    .box {
-      background: white;
-      padding: 1.2rem;
-      border-radius: 14px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
 
-    h2 {
-      text-align: center;
-      margin-top: 0;
-    }
+input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid #cbd5f5;
+  margin-top: 4px;
+}
 
-    label {
-      display: block;
-      margin-top: 1rem;
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
+button {
+  padding: 10px 14px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: none;
+  background: #e5e7eb;
+  margin-top: 8px;
+}
 
-    input {
-      width: 100%;
-      padding: 0.9rem;
-      font-size: 1.6rem;
-      margin-top: 0.3rem;
-    }
+.reset {
+  background: #ef4444;
+  color: white;
+  width: 100%;
+}
 
-    /* Fjern opp/ned-piler */
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
+.tanks {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+}
 
-    .result {
-      margin-top: 1.2rem;
-      padding: 1rem;
-      background: #eef6ff;
-      border-radius: 10px;
-      font-size: 1.6rem;
-      text-align: center;
-      font-weight: 700;
-    }
+.tank-wrap {
+  width: 110px;
+  text-align: center;
+}
 
-    .total {
-      background: #f7f7f7;
-      font-size: 1.4rem;
-    }
+.tank {
+  height: 220px;
+  border-radius: 14px;
+  border: 2px solid #94a3b8;
+  background: #f1f5f9;
+  overflow: hidden;
+  position: relative;
+}
 
-    button {
-      width: 100%;
-      margin-top: 1.2rem;
-      padding: 0.8rem;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 10px;
-      background: #d9534f;
-      color: white;
-      font-weight: 600;
-    }
-  </style>
+.fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, #22c55e, #4ade80);
+  transform-origin: bottom;
+}
+
+.small {
+  font-size: 13px;
+}
+
+.time {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+}
+</style>
 </head>
+
 <body>
 
-<div class="box">
-  <h2>Gjenstående Tapping</h2>
+<h1>Gjenstående Tapping</h1>
 
-  <label>Tank 1 (liter)</label>
-  <input id="tank1" type="number" inputmode="numeric">
+<div class="card">
+  <label>Steriltank (liter)</label>
+  <input id="sterilInput">
 
-  <label>Tank 2 (liter)</label>
-  <input id="tank2" type="number" inputmode="numeric">
+  <div id="modningInputs"></div>
 
-  <label>Liter per time / maskin</label>
-  <input id="rate" type="number" inputmode="numeric">
+  <button id="addTank">+ Legg til Modningstank</button>
+
+  <label>Liter per time (per maskin)</label>
+  <input id="rateInput">
 
   <label>Antall maskiner</label>
-  <input id="machines" type="number" inputmode="numeric">
+  <input id="machineInput">
+</div>
 
-  <div id="totalLiters" class="result total">0 L</div>
-  <div id="timeResult" class="result">–</div>
+<div class="card">
+  <div class="time" id="timeLeft">ca. – timer</div>
+</div>
 
-  <button id="resetBtn">Nullstill</button>
+<div class="card">
+  <div class="tanks" id="tankView"></div>
+</div>
+
+<div class="card">
+  <button class="reset" id="reset">Nullstill</button>
 </div>
 
 <script>
-  const fields = ["tank1", "tank2", "rate", "machines"];
+let state = JSON.parse(localStorage.getItem("state")) || {
+  steril: { max: 0, current: 0 },
+  modning: [],
+  rate: 0,
+  machines: 0,
+  last: performance.now()
+};
 
-  function calculate() {
-    const tank1 = Number(document.getElementById("tank1").value) || 0;
-    const tank2 = Number(document.getElementById("tank2").value) || 0;
-    const rate = Number(document.getElementById("rate").value) || 0;
-    const machines = Number(document.getElementById("machines").value) || 0;
+function save() {
+  localStorage.setItem("state", JSON.stringify(state));
+}
 
-    const totalLiters = tank1 + tank2;
-    document.getElementById("totalLiters").textContent =
-      `${totalLiters.toLocaleString()} L`;
+const modningInputs = document.getElementById("modningInputs");
+const tankView = document.getElementById("tankView");
+const timeLeftEl = document.getElementById("timeLeft");
 
-    const capacity = rate * machines;
+function rebuildInputs() {
+  modningInputs.innerHTML = "";
+  state.modning.forEach((tank, i) => {
+    const label = document.createElement("label");
+    label.textContent = `Modningstank ${i + 1} (liter)`;
 
-    if (capacity > 0 && totalLiters > 0) {
-      const hours = Math.ceil(totalLiters / capacity);
-      document.getElementById("timeResult").textContent =
-        `ca. ${hours} timer`;
-    } else {
-      document.getElementById("timeResult").textContent = "–";
+    const input = document.createElement("input");
+    input.value = tank.max || "";
+    input.oninput = () => {
+      tank.max = tank.current = Number(input.value);
+      save();
+    };
+
+    const remove = document.createElement("button");
+    remove.textContent = "− Fjern";
+    remove.onclick = () => {
+      state.modning.splice(i, 1);
+      rebuildInputs();
+      save();
+    };
+
+    modningInputs.append(label, input, remove);
+  });
+}
+
+function rebuildTanks() {
+  tankView.innerHTML = "";
+
+  const all = [
+    { label: "Steriltank", tank: state.steril },
+    ...state.modning.map((t, i) => ({ label: `Modning ${i + 1}`, tank: t }))
+  ];
+
+  state.views = [];
+
+  all.forEach(obj => {
+    const wrap = document.createElement("div");
+    wrap.className = "tank-wrap";
+
+    const tank = document.createElement("div");
+    tank.className = "tank";
+
+    const fill = document.createElement("div");
+    fill.className = "fill";
+    tank.appendChild(fill);
+
+    const label = document.createElement("div");
+    label.textContent = obj.label;
+    label.className = "small";
+
+    const val = document.createElement("div");
+    val.className = "small";
+
+    wrap.append(tank, label, val);
+    tankView.appendChild(wrap);
+
+    state.views.push({ tank: obj.tank, fill, val });
+  });
+}
+
+sterilInput.value = state.steril.max || "";
+rateInput.value = state.rate || "";
+machineInput.value = state.machines || "";
+
+sterilInput.oninput = () => {
+  state.steril.max = state.steril.current = Number(sterilInput.value);
+  save();
+};
+
+rateInput.oninput = () => { state.rate = Number(rateInput.value); save(); };
+machineInput.oninput = () => { state.machines = Number(machineInput.value); save(); };
+
+addTank.onclick = () => {
+  state.modning.push({ max: 0, current: 0 });
+  rebuildInputs();
+  save();
+};
+
+reset.onclick = () => {
+  localStorage.clear();
+  location.reload();
+};
+
+rebuildInputs();
+rebuildTanks();
+
+function loop(t) {
+  const dt = (t - state.last) / 1000;
+  state.last = t;
+
+  const speed = state.rate * state.machines;
+
+  if (speed > 0) {
+    const delta = speed * dt / 3600;
+
+    // Tapp fra Steriltank
+    state.steril.current -= delta;
+
+    // Hvis Steriltank går tom, hent fra Modningstanker
+    while (state.steril.current < 0 && state.modning.length > 0) {
+      const needed = Math.abs(state.steril.current);
+      const m = state.modning[0];
+
+      m.current -= needed;
+
+      if (m.current <= 0) {
+        state.modning.shift();
+        state.steril.current = 0;
+      } else {
+        state.steril.current = 0;
+      }
     }
 
-    fields.forEach(id => {
-      localStorage.setItem(id, document.getElementById(id).value);
-    });
+    if (state.steril.current < 0) state.steril.current = 0;
+
+    save();
   }
 
-  function resetAll() {
-    fields.forEach(id => {
-      const el = document.getElementById(id);
-      el.value = "";
-      localStorage.removeItem(id);
-    });
-
-    requestAnimationFrame(() => {
-      document.getElementById("totalLiters").textContent = "0 L";
-      document.getElementById("timeResult").textContent = "–";
-    });
-  }
-
-  function lift(el) {
-    setTimeout(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 200);
-  }
-
-  window.addEventListener("DOMContentLoaded", () => {
-    fields.forEach(id => {
-      const el = document.getElementById(id);
-      const saved = localStorage.getItem(id);
-      if (saved !== null) el.value = saved;
-
-      el.addEventListener("input", calculate);
-      el.addEventListener("focus", () => lift(el));
-    });
-
-    document.getElementById("resetBtn")
-      .addEventListener("click", resetAll);
-
-    calculate();
+  // Oppdater tanker visuelt
+  state.views.forEach(v => {
+    v.fill.style.height =
+      v.tank.max ? (v.tank.current / v.tank.max * 100) + "%" : "0%";
+    v.val.textContent = Math.round(v.tank.current) + " L";
   });
+
+  // Beregn ca. timer igjen
+  const totalLiters =
+    state.steril.current +
+    state.modning.reduce((s, t) => s + t.current, 0);
+
+  if (speed > 0 && totalLiters > 0) {
+    const hours = Math.ceil(totalLiters / speed);
+    timeLeftEl.textContent = `ca. ${hours} timer`;
+  } else {
+    timeLeftEl.textContent = "ca. – timer";
+  }
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
 </script>
 
 </body>
