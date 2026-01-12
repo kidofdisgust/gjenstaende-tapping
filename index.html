@@ -5,310 +5,220 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gjenstående Tapping</title>
 
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gjenstående Tapping">
+
 <style>
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
-  margin: 0;
-  padding: 16px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f5f6f7;
-  color: #222;
+  font-family: system-ui, sans-serif;
+  background: #f2f2f2;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
 }
 
-h1 {
+.box {
+  background: white;
+  padding: 1.2rem;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
   margin-top: 0;
-  font-size: 22px;
-}
-
-.section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
 label {
-  font-size: 14px;
-  margin-bottom: 4px;
   display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  font-size: 18px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 0.9rem;
+  font-size: 1.6rem;
+  margin-top: 0.3rem;
 }
 
-.input-row {
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+input[type=number] { -moz-appearance: textfield; }
+
+.modning-row {
   display: flex;
-  gap: 6px;
+  gap: 0.4rem;
   align-items: center;
 }
 
-.modning-input {
+.modning-row input {
   flex: 1;
 }
 
-.minus-btn {
-  width: 42px;
-  height: 42px;
-  font-size: 24px;
-  border-radius: 8px;
-  border: none;
+.remove-btn {
+  width: 48px;
+  font-size: 1.6rem;
   background: #ddd;
-  cursor: pointer;
+  border: none;
+  border-radius: 8px;
 }
 
 .add-btn {
   width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  font-size: 20px;
-  border-radius: 10px;
+  margin-top: 1rem;
+  padding: 0.7rem;
+  font-size: 1.4rem;
   border: none;
+  border-radius: 10px;
   background: #e0e0e0;
-  cursor: pointer;
 }
 
 .result {
-  font-size: 32px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.reset-btn {
-  margin-top: 10px;
-  width: 100%;
-  padding: 12px;
-  font-size: 18px;
+  margin-top: 1.2rem;
+  padding: 1rem;
+  background: #eef6ff;
   border-radius: 10px;
+  font-size: 1.6rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.total {
+  background: #f7f7f7;
+  font-size: 1.4rem;
+}
+
+button.reset {
+  width: 100%;
+  margin-top: 1.2rem;
+  padding: 0.8rem;
+  font-size: 1.2rem;
   border: none;
+  border-radius: 10px;
   background: #d9534f;
-  color: #fff;
-  cursor: pointer;
-}
-
-.tank-area {
-  display: flex;
-  gap: 10px;
-  height: 220px;
-}
-
-.tank {
-  flex: 1;
-  border: 2px solid #888;
-  border-radius: 12px;
-  position: relative;
-  background: #fff;
-  overflow: hidden;
-}
-
-.fill {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(#4caf50, #81c784);
-  transition: height 0.4s linear;
-}
-
-.tank-label {
-  position: absolute;
-  top: 6px;
-  width: 100%;
-  text-align: center;
-  font-size: 14px;
+  color: white;
   font-weight: 600;
-}
-
-.tank-liters {
-  position: absolute;
-  bottom: 6px;
-  width: 100%;
-  text-align: center;
-  font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Gjenstående Tapping</h1>
+<div class="box">
+  <h2>Gjenstående Tapping</h2>
 
-<div class="section">
   <label>Steriltank (liter)</label>
-  <input id="sterileInput" inputmode="numeric" pattern="[0-9]*" placeholder="Liter">
+  <input id="steriltank" type="number" inputmode="numeric" placeholder="Liter">
 
-  <button class="add-btn" onclick="addModning()">＋ Legg til Modningstank</button>
+  <button class="add-btn" id="addTank">+ Legg til Modningstank</button>
 
-  <div id="modningInputs"></div>
+  <div id="modningContainer"></div>
 
-  <label>Liter per time (per maskin)</label>
-  <input id="lph" inputmode="numeric" pattern="[0-9]*" placeholder="Liter/time">
+  <label>Liter per Time (per maskin)</label>
+  <input id="rate" type="number" inputmode="numeric">
 
   <label>Antall Tappemaskiner</label>
-  <input id="machines" inputmode="numeric" pattern="[0-9]*" placeholder="Antall">
-</div>
+  <input id="machines" type="number" inputmode="numeric">
 
-<div class="section">
-  <div class="result" id="timeResult">ca. 0 timer</div>
-  <button class="reset-btn" onclick="resetAll()">Nullstill</button>
-</div>
+  <div id="totalLiters" class="result total">0 L</div>
+  <div id="timeResult" class="result">–</div>
 
-<div class="section">
-  <div class="tank-area" id="tankArea"></div>
+  <button class="reset" id="resetBtn">Nullstill</button>
 </div>
 
 <script>
-const MAX_TANKS = 5;
+const MAX_MODNING = 5;
+const modningContainer = document.getElementById("modningContainer");
 
-let state = {
-  sterile: 0,
-  modning: [],
-  lph: 0,
-  machines: 0,
-  activeModning: 0,
-  lastTime: Date.now()
-};
+function calculate() {
+  let total = Number(steriltank.value) || 0;
 
-function save() {
-  localStorage.setItem("tappingState", JSON.stringify(state));
-}
-
-function load() {
-  const s = localStorage.getItem("tappingState");
-  if (s) state = JSON.parse(s);
-}
-
-function addModning() {
-  if (state.modning.length >= MAX_TANKS - 1) return;
-  state.modning.push(null);   // 👈 ingen 0
-  save();
-  renderInputs();
-  renderTanks();
-
-  setTimeout(() => {
-    const inputs = document.querySelectorAll(".modning-input");
-    inputs[inputs.length - 1]?.focus();
-  }, 50);
-}
-
-function removeModning(i) {
-  state.modning.splice(i, 1);
-  if (state.activeModning > i) state.activeModning--;
-  save();
-  renderInputs();
-  renderTanks();
-}
-
-function renderInputs() {
-  const c = document.getElementById("modningInputs");
-  c.innerHTML = "";
-  state.modning.forEach((v, i) => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <label>Modningstank (liter)</label>
-      <div class="input-row">
-        <input class="modning-input" inputmode="numeric" pattern="[0-9]*"
-               placeholder="Liter" value="${v ?? ""}">
-        <button class="minus-btn">−</button>
-      </div>
-    `;
-    div.querySelector("input").oninput = e => {
-      state.modning[i] = e.target.value === "" ? 0 : Number(e.target.value);
-      save();
-    };
-    div.querySelector("button").onclick = () => removeModning(i);
-    c.appendChild(div);
+  document.querySelectorAll(".modning-input").forEach(i => {
+    total += Number(i.value) || 0;
   });
-}
 
-["sterileInput","lph","machines"].forEach(id => {
-  document.getElementById(id).oninput = e => {
-    state[id === "sterileInput" ? "sterile" : id] = Number(e.target.value) || 0;
-    save();
-  };
-});
+  totalLiters.textContent = `${total.toLocaleString()} L`;
 
-function resetAll() {
-  localStorage.removeItem("tappingState");
-  state = { sterile:0, modning:[], lph:0, machines:0, activeModning:0, lastTime:Date.now() };
-  document.querySelectorAll("input").forEach(i => i.value = "");
-  renderInputs();
-  renderTanks();
-  updateTime();
-}
+  const rateVal = Number(rate.value) || 0;
+  const machinesVal = Number(machines.value) || 0;
+  const capacity = rateVal * machinesVal;
 
-function updateTime() {
-  const rate = state.lph * state.machines;
-  const total = state.sterile + state.modning.reduce((a,b)=>a+b,0);
-  const hours = rate > 0 ? Math.ceil(total / rate) : 0;
-  document.getElementById("timeResult").textContent = `ca. ${hours} timer`;
-}
-
-function renderTanks() {
-  const a = document.getElementById("tankArea");
-  a.innerHTML = "";
-
-  const tanks = [
-    { label: "Steriltank", liters: state.sterile },
-    ...state.modning.map(l => ({ label:"Modningstank", liters:l || 0 }))
-  ];
-
-  tanks.forEach(t => {
-    const tank = document.createElement("div");
-    tank.className = "tank";
-
-    const fill = document.createElement("div");
-    fill.className = "fill";
-    fill.style.height = t.liters > 0 ? "100%" : "0%";
-
-    const label = document.createElement("div");
-    label.className = "tank-label";
-    label.textContent = t.label;
-
-    const lit = document.createElement("div");
-    lit.className = "tank-liters";
-    lit.textContent = Math.round(t.liters) + " L";
-
-    tank.appendChild(fill);
-    tank.appendChild(label);
-    tank.appendChild(lit);
-    a.appendChild(tank);
-  });
-}
-
-function tick() {
-  const now = Date.now();
-  const dt = (now - state.lastTime) / 3600000;
-  state.lastTime = now;
-
-  const rate = state.lph * state.machines;
-  if (rate <= 0) return;
-
-  if (state.modning.length > 0) {
-    const i = state.activeModning;
-    state.modning[i] = Math.max(0, state.modning[i] - rate * dt);
-    if (state.modning[i] === 0) state.activeModning++;
-  } else if (state.sterile > 0) {
-    state.sterile = Math.max(0, state.sterile - rate * dt);
+  if (capacity > 0 && total > 0) {
+    timeResult.textContent = `ca. ${Math.ceil(total / capacity)} timer`;
+  } else {
+    timeResult.textContent = "–";
   }
 
-  updateTime();
-  renderTanks();
-  save();
+  localStorage.setItem("state", JSON.stringify({
+    steriltank: steriltank.value,
+    modning: [...document.querySelectorAll(".modning-input")].map(i => i.value),
+    rate: rate.value,
+    machines: machines.value
+  }));
 }
 
-load();
-renderInputs();
-renderTanks();
-updateTime();
-setInterval(tick, 1000);
+function addModningTank(value = "") {
+  if (document.querySelectorAll(".modning-row").length >= MAX_MODNING) return;
+
+  const row = document.createElement("div");
+  row.className = "modning-row";
+
+  row.innerHTML = `
+    <input class="modning-input" type="number" inputmode="numeric" placeholder="Modningstank (liter)">
+    <button class="remove-btn">−</button>
+  `;
+
+  row.querySelector("input").value = value;
+  row.querySelector("input").addEventListener("input", calculate);
+  row.querySelector("input").addEventListener("focus", e =>
+    e.target.scrollIntoView({behavior:"smooth", block:"center"})
+  );
+
+  row.querySelector("button").onclick = () => {
+    row.remove();
+    calculate();
+  };
+
+  modningContainer.appendChild(row);
+
+  setTimeout(() => row.querySelector("input").focus(), 50);
+}
+
+addTank.onclick = () => addModningTank();
+
+resetBtn.onclick = () => {
+  localStorage.removeItem("state");
+  steriltank.value = "";
+  rate.value = "";
+  machines.value = "";
+  modningContainer.innerHTML = "";
+  totalLiters.textContent = "0 L";
+  timeResult.textContent = "–";
+};
+
+[steriltank, rate, machines].forEach(i => {
+  i.addEventListener("input", calculate);
+  i.addEventListener("focus", e =>
+    e.target.scrollIntoView({behavior:"smooth", block:"center"})
+  );
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = JSON.parse(localStorage.getItem("state") || "{}");
+  if (saved.steriltank) steriltank.value = saved.steriltank;
+  if (saved.rate) rate.value = saved.rate;
+  if (saved.machines) machines.value = saved.machines;
+  (saved.modning || []).forEach(v => addModningTank(v));
+  calculate();
+});
 </script>
 
 </body>
