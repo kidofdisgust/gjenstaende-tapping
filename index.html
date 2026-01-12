@@ -35,7 +35,7 @@ h2 {
 
 label {
   display: block;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -44,7 +44,7 @@ input {
   width: 100%;
   padding: 0.9rem;
   font-size: 1.6rem;
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -53,10 +53,15 @@ input[type=number]::-webkit-outer-spin-button {
 }
 input[type=number] { -moz-appearance: textfield; }
 
+.modning-block {
+  margin-top: 1.1rem;
+}
+
 .modning-row {
   display: flex;
   gap: 0.4rem;
   align-items: center;
+  margin-top: 0.4rem;
 }
 
 .modning-row input {
@@ -73,7 +78,7 @@ input[type=number] { -moz-appearance: textfield; }
 
 .add-btn {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
   padding: 0.7rem;
   font-size: 1.4rem;
   border: none;
@@ -116,7 +121,7 @@ button.reset {
   <h2>Gjenstående Tapping</h2>
 
   <label>Steriltank (liter)</label>
-  <input id="steriltank" type="number" inputmode="numeric" placeholder="Liter">
+  <input id="steriltank" type="number" inputmode="numeric">
 
   <button class="add-btn" id="addTank">+ Legg til Modningstank</button>
 
@@ -129,7 +134,7 @@ button.reset {
   <input id="machines" type="number" inputmode="numeric">
 
   <div id="totalLiters" class="result total">0 L</div>
-  <div id="timeResult" class="result">–</div>
+  <div id="timeResult" class="result">ca. Timer</div>
 
   <button class="reset" id="resetBtn">Nullstill</button>
 </div>
@@ -152,9 +157,9 @@ function calculate() {
   const capacity = rateVal * machinesVal;
 
   if (capacity > 0 && total > 0) {
-    timeResult.textContent = `ca. ${Math.ceil(total / capacity)} timer`;
+    timeResult.textContent = `ca. ${Math.ceil(total / capacity)} Timer`;
   } else {
-    timeResult.textContent = "–";
+    timeResult.textContent = "ca. Timer";
   }
 
   localStorage.setItem("state", JSON.stringify({
@@ -166,30 +171,33 @@ function calculate() {
 }
 
 function addModningTank(value = "") {
-  if (document.querySelectorAll(".modning-row").length >= MAX_MODNING) return;
+  if (document.querySelectorAll(".modning-block").length >= MAX_MODNING) return;
 
-  const row = document.createElement("div");
-  row.className = "modning-row";
+  const block = document.createElement("div");
+  block.className = "modning-block";
 
-  row.innerHTML = `
-    <input class="modning-input" type="number" inputmode="numeric" placeholder="Modningstank (liter)">
-    <button class="remove-btn">−</button>
+  block.innerHTML = `
+    <label>Modningstank (liter)</label>
+    <div class="modning-row">
+      <input class="modning-input" type="number" inputmode="numeric">
+      <button class="remove-btn">−</button>
+    </div>
   `;
 
-  row.querySelector("input").value = value;
-  row.querySelector("input").addEventListener("input", calculate);
-  row.querySelector("input").addEventListener("focus", e =>
-    e.target.scrollIntoView({behavior:"smooth", block:"center"})
+  const input = block.querySelector("input");
+  input.value = value;
+  input.addEventListener("input", calculate);
+  input.addEventListener("focus", e =>
+    e.target.scrollIntoView({ behavior:"smooth", block:"center" })
   );
 
-  row.querySelector("button").onclick = () => {
-    row.remove();
+  block.querySelector("button").onclick = () => {
+    block.remove();
     calculate();
   };
 
-  modningContainer.appendChild(row);
-
-  setTimeout(() => row.querySelector("input").focus(), 50);
+  modningContainer.appendChild(block);
+  setTimeout(() => input.focus(), 50);
 }
 
 addTank.onclick = () => addModningTank();
@@ -201,13 +209,13 @@ resetBtn.onclick = () => {
   machines.value = "";
   modningContainer.innerHTML = "";
   totalLiters.textContent = "0 L";
-  timeResult.textContent = "–";
+  timeResult.textContent = "ca. Timer";
 };
 
 [steriltank, rate, machines].forEach(i => {
   i.addEventListener("input", calculate);
   i.addEventListener("focus", e =>
-    e.target.scrollIntoView({behavior:"smooth", block:"center"})
+    e.target.scrollIntoView({ behavior:"smooth", block:"center" })
   );
 });
 
