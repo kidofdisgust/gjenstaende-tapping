@@ -6,6 +6,10 @@
 <title>Gjenstående Tapping</title>
 
 <style>
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 16px;
@@ -138,17 +142,17 @@ input {
 
 <div class="section">
   <label>Steriltank (liter)</label>
-  <input id="sterileInput" inputmode="numeric" pattern="[0-9]*">
+  <input id="sterileInput" inputmode="numeric" pattern="[0-9]*" placeholder="Liter">
 
   <button class="add-btn" onclick="addModning()">＋ Legg til Modningstank</button>
 
   <div id="modningInputs"></div>
 
   <label>Liter per time (per maskin)</label>
-  <input id="lph" inputmode="numeric" pattern="[0-9]*">
+  <input id="lph" inputmode="numeric" pattern="[0-9]*" placeholder="Liter/time">
 
   <label>Antall Tappemaskiner</label>
-  <input id="machines" inputmode="numeric" pattern="[0-9]*">
+  <input id="machines" inputmode="numeric" pattern="[0-9]*" placeholder="Antall">
 </div>
 
 <div class="section">
@@ -183,7 +187,7 @@ function load() {
 
 function addModning() {
   if (state.modning.length >= MAX_TANKS - 1) return;
-  state.modning.push(0);
+  state.modning.push(null);   // 👈 ingen 0
   save();
   renderInputs();
   renderTanks();
@@ -210,12 +214,13 @@ function renderInputs() {
     div.innerHTML = `
       <label>Modningstank (liter)</label>
       <div class="input-row">
-        <input class="modning-input" inputmode="numeric" pattern="[0-9]*" value="${v}">
+        <input class="modning-input" inputmode="numeric" pattern="[0-9]*"
+               placeholder="Liter" value="${v ?? ""}">
         <button class="minus-btn">−</button>
       </div>
     `;
     div.querySelector("input").oninput = e => {
-      state.modning[i] = Number(e.target.value) || 0;
+      state.modning[i] = e.target.value === "" ? 0 : Number(e.target.value);
       save();
     };
     div.querySelector("button").onclick = () => removeModning(i);
@@ -252,7 +257,7 @@ function renderTanks() {
 
   const tanks = [
     { label: "Steriltank", liters: state.sterile },
-    ...state.modning.map(l => ({ label:"Modningstank", liters:l }))
+    ...state.modning.map(l => ({ label:"Modningstank", liters:l || 0 }))
   ];
 
   tanks.forEach(t => {
